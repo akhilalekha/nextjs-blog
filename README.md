@@ -48,4 +48,96 @@ export async function getStaticProps() {
 }
 ```
 
-`getStaticProps` runs at build time in production, and inside the function, you can fetch external data and send it as props to the page.
+`getStaticProps` runs at build time in production, and inside the function, you can fetch external data and send it as props to the page. `getStaticProps` only runs on the server-side. It will never run on the client-side. It won’t even be included in the JS bundle for the browser. That means you can write code such as direct database queries without them being sent to browsers.
+
+### Read from file system
+
+Import the function to read from file system in `index.js`. `allPostsData` is passed to the Home component as props.
+
+```javascript
+import { getSortedPostsData } from "../lib/posts";
+
+export async function getStaticProps() {
+	const allPostsData = getSortedPostsData();
+	return {
+		props: {
+			allPostsData
+		}
+	};
+}
+```
+
+### Fetch External API
+
+```javascript
+export async function getSortedPostsData() {
+	// Instead of the file system,
+	// fetch post data from an external API endpoint
+	const res = await fetch("..");
+	return res.json();
+}
+```
+
+### Query Database
+
+```javascript
+import someDatabaseSDK from 'someDatabaseSDK'
+
+const databaseClient = someDatabaseSDK.createClient(...)
+
+export async function getSortedPostsData() {
+  // Instead of the file system,
+  // fetch post data from a database
+  return databaseClient.query('SELECT posts...')
+}
+```
+
+**Development vs. Production**
+
+- In development (npm run dev or yarn dev), `getStaticProps` runs on every request.
+- In production, `getStaticProps` runs at build time. However, this behavior can be enhanced using the `fallback` key returned by `getStaticPaths`
+  Because it’s meant to be run at build time, you won’t be able to use data that’s only available during request time, such as query parameters or HTTP headers.
+
+**Only Allowed in a Page**
+`getStaticProps` can only be exported from a page. You can’t export it from non-page files.
+
+One of the reasons for this restriction is that React needs to have all the required data before the page is rendered.
+
+### Fetching Data at Request Time
+
+If you need to fetch data at request time instead of at build time, you can try Server-side Rendering.
+
+To use Server-side Rendering, you need to export `getServerSideProps` instead of `getStaticProps` from your page.
+
+```javascript
+export async function getServerSideProps(context) {
+	return {
+		props: {
+			// props for your component
+		}
+	};
+}
+```
+
+### Client side rendering
+
+**SWR** : The team behind Next.js has created a React hook for data fetching called SWR. We highly recommend it if you’re fetching data on the client side.
+
+```javascript
+import useSWR from "swr";
+
+function Profile() {
+	const { data, error } = useSWR("/api/user", fetch);
+
+	if (error) return <div>failed to load</div>;
+	if (!data) return <div>loading...</div>;
+	return <div>hello {data.name}!</div>;
+}
+```
+
+### Each Page Path Depends on External Data
+
+Next.js allows you to statically generate pages with paths that depend on external data. This enables dynamic URLs in Next.js.
+We want each post to have the path `/posts/<id>`, where `<id>` is the name of the markdown file under the top-level posts directory. Since we have `ssg-ssr.md` and `pre-rendering.md`, we’d like the paths to be `/posts/ssg-ssr` and `/posts/pre-rendering`.
+
+- create a page called `[id].js` under `pages/posts`. Pages that begin with `[` and end with `]` are dynamic routes in Next.js.
