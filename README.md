@@ -141,3 +141,7 @@ Next.js allows you to statically generate pages with paths that depend on extern
 We want each post to have the path `/posts/<id>`, where `<id>` is the name of the markdown file under the top-level posts directory. Since we have `ssg-ssr.md` and `pre-rendering.md`, we’d like the paths to be `/posts/ssg-ssr` and `/posts/pre-rendering`.
 
 - create a page called `[id].js` under `pages/posts`. Pages that begin with `[` and end with `]` are dynamic routes in Next.js.
+
+- export an async function called `getStaticPaths` from this page. In this function, we need to return a list of possible values for id.
+
+- Finally, we need to implement `getStaticProps` again - this time, to fetch necessary data for the blog post with a given id. `getStaticProps` is given params, which contains id (because the file name is `[id].js`).
