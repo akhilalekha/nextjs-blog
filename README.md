@@ -145,3 +145,56 @@ We want each post to have the path `/posts/<id>`, where `<id>` is the name of th
 - export an async function called `getStaticPaths` from this page. In this function, we need to return a list of possible values for id.
 
 - Finally, we need to implement `getStaticProps` again - this time, to fetch necessary data for the blog post with a given id. `getStaticProps` is given params, which contains id (because the file name is `[id].js`).
+
+### Dynamic Routes Details
+
+Like `getStaticProps`, `getStaticPaths` can fetch data from any data source. In our example, `getAllPostIds` (which is used by `getStaticPaths`) may fetch from an external API endpoint:
+
+```javascript
+export async function getAllPostIds() {
+	// Instead of the file system,
+	// fetch post data from an external API endpoint
+	const res = await fetch("..");
+	const posts = await res.json();
+	return posts.map(post => {
+		return {
+			params: {
+				id: post.id
+			}
+		};
+	});
+}
+```
+
+**Fallback**
+
+- If `fallback` is `false`, then any paths not returned by `getStaticPaths` will result in a 404 page.
+
+- If `fallback` is `true`, for the paths that has not been generated, Next.js will serve a "fallback" version of the page on first request to such path.
+
+- If `fallback` is `blocking`, then new paths will be server-side rendered with `getStaticProps`, and cached for future requests so it only happens once per path.
+
+**Catch all routes**
+
+Dynamic routes can be extended to catch all paths by adding three dots (...) inside the brackets. For example:
+`pages/posts/[...id].js` matches `/posts/a`, but also `/posts/a/b`, `/posts/a/b/c` and so on.
+
+Here, you must return an array as the value of the id key in `getStaticPaths` like so:
+
+```javascript
+return [
+	{
+		params: {
+			// Statically Generates /posts/a/b/c
+			id: ["a", "b", "c"]
+		}
+	}
+	//...
+];
+```
+
+**custom 404 page**: To create a custom 404 page, create `pages/404.js`. This file is statically generated at build time.
+
+### Api Routes
+
+Next.js has support for API Routes, which let you easily create an API endpoint as a Node.js serverless function.
