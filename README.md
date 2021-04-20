@@ -1,3 +1,5 @@
+# Next.js Blog
+
 This is a starter template for [Learn Next.js](https://nextjs.org/learn).
 
 - Components are placed in `/components` folder.
